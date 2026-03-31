@@ -10,17 +10,18 @@ class RabbitMQClient {
         try {
             const rabbitMQUrl = this.config.url || "amqp://localhost:5672";
             this.connection = await amqp.connect(rabbitMQUrl);
-            this.channel = this.connection.createChannel();
+            // ⚡ Add await here
+            this.channel = await this.connection.createChannel();
             if (this.config.queues) {
                 for (const queue of this.config.queues) {
                     await this.channel.assertQueue(queue, { durable: true });
                 }
             }
-            const serviceName = this.config.sericeName || "RabbitMQClient";
+            const serviceName = this.config.serviceName || "RabbitMQClient"; // also fix typo: serviceName -> serviceName
             console.log(`${serviceName} connected to RabbitMQ at ${rabbitMQUrl}`);
         }
         catch (error) {
-            const serviceName = this.config.sericeName || "RabbitMQClient";
+            const serviceName = this.config.serviceName || "RabbitMQClient";
             console.error(`${serviceName} failed to connect to RabbitMQ:`, error);
         }
     }
@@ -30,14 +31,14 @@ class RabbitMQClient {
                 console.error("Channel is not established. Please connect to RabbitMQ first.");
                 return false;
             }
-            const serviceName = this.config.sericeName || "RabbitMQClient";
+            const serviceName = this.config.serviceName || "RabbitMQClient";
             await this.channel.assertQueue(queue, { durable: true });
             await this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true });
             console.log(`${serviceName} published message to queue ${queue}:`, message);
             return true;
         }
         catch (error) {
-            console.log(`${this.config.sericeName || "RabbitMQClient"} failed to publish message to queue ${queue}:`, error);
+            console.log(`${this.config.serviceName || "RabbitMQClient"} failed to publish message to queue ${queue}:`, error);
             return false;
         }
     }
@@ -55,17 +56,17 @@ class RabbitMQClient {
                     if (!options.noAck) {
                         this.channel.ack(msg);
                     }
-                    console.log(`${this.config.sericeName || "RabbitMQClient"} consumed message from queue ${queue}:`, content);
+                    console.log(`${this.config.serviceName || "RabbitMQClient"} consumed message from queue ${queue}:`, content);
                 }
                 catch (error) {
-                    console.error(`${this.config.sericeName || "RabbitMQClient"} failed to consume message from queue ${queue}:`, error);
+                    console.error(`${this.config.serviceName || "RabbitMQClient"} failed to consume message from queue ${queue}:`, error);
                 }
             }
         });
         try {
         }
         catch (error) {
-            console.error(`${this.config.sericeName || "RabbitMQClient"} failed to consume from queue ${queue}:`, error);
+            console.error(`${this.config.serviceName || "RabbitMQClient"} failed to consume from queue ${queue}:`, error);
         }
     }
     async close() {
@@ -80,7 +81,7 @@ class RabbitMQClient {
             }
         }
         catch (error) {
-            console.error(`${this.config.sericeName || "RabbitMQClient"} failed to close connection:`, error);
+            console.error(`${this.config.serviceName || "RabbitMQClient"} failed to close connection:`, error);
         }
     }
 }

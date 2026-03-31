@@ -1,7 +1,7 @@
 interface RabbitMQConfig {
     url?: string;
     queues?: string[];
-    sericeName?: string;
+    serviceName?: string;
 }
 declare class RabbitMQClient {
     private config;
